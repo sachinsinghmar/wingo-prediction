@@ -127,6 +127,21 @@ function predict() {
         nextDisplay.innerText = `${predSize === "BIG" ? "BADA" : "CHOTA"} + ${predColor === "RED" ? "🔴 RED" : "🟢 GREEN"}`;
         nextDisplay.style.color = predColor === "RED" ? "#f43f5e" : "#10b981";
     }
+
+    // AI Badge Update
+    const aiBadge = document.getElementById('ai-badge');
+    if (aiBadge) {
+        if (type.includes("AI-SMART")) {
+            aiBadge.style.background = "rgba(16, 185, 129, 0.2)";
+            aiBadge.style.borderColor = "#10b981";
+            aiBadge.innerHTML = '<span class="pulse" style="background: #10b981;"></span> AI-SMART';
+        } else {
+            aiBadge.style.background = "rgba(99, 102, 241, 0.2)";
+            aiBadge.style.borderColor = "#6366f1";
+            aiBadge.innerHTML = '<span class="pulse" style="background: #6366f1;"></span> AI PATTERN';
+        }
+    }
+
     if (confFill) confFill.style.width = `${confidence}%`;
     if (confText) confText.innerText = `BHAROSA: ${confidence}%`;
     if (trendText) {

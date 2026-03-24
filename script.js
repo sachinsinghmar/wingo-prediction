@@ -241,7 +241,7 @@ async function jalwaLogin() {
                 body: (proxy && proxy.includes('allorigins')) ? null : JSON.stringify({ loginName, loginPassword: pass, loginType: 0 })
             });
 
-            if (!res.ok) throw new Error(`Status ${res.status}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             let d = await res.json();
             if (proxy && proxy.includes('allorigins') && d.contents) d = JSON.parse(d.contents);
 
@@ -255,7 +255,7 @@ async function jalwaLogin() {
             }
         } catch (e) {
             console.error("Login Error:", e);
-            if (!proxy) setBadge(false, '❌ BLOCKED'); // If direct fail, maybe no extension
+            if (!proxy) console.log("Direct connection blocked by browser/CORS");
         }
         return null;
     }
@@ -270,7 +270,7 @@ async function jalwaLogin() {
         }
     }
     setBadge(false, '❌ FAILED');
-    setStatus('⚠️ Kisi server ne response nahi diya. Credentials ya Extension check karein.', '#f43f5e');
+    setStatus('⚠️ Kisi server ne response nahi diya. (Hint: PC Extension check karein ya Manual Token use karein)', '#f43f5e');
 }
 
 async function jalwaFetch() {

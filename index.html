@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Win Go Predictor Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">WIN GO PRO</div>
+            <div class="status-badge"><span class="pulse"></span> LIVE CALC</div>
+        </header>
+
+        <section class="prediction-panel">
+            <div class="panel-header">NEXT PREDICTION</div>
+            <div class="prediction-display">
+                <div id="next-result">WAITING...</div>
+                <div id="number-suggestion"
+                    style="margin: 10px 0; color: var(--accent); font-weight: 700; letter-spacing: 2px;"></div>
+                <div class="conf-bar">
+                    <div id="conf-fill" style="width: 0%"></div>
+                </div>
+                <div id="confidence-text">INPUT HISTORY</div>
+            </div>
+            <div class="stats-row">
+                <div class="stat">
+                    <span class="stat-label">TREND</span>
+                    <span id="trend-type">N/A</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">ACCURACY</span>
+                    <span id="accuracy-rate">72%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- JALWA CONNECT -->
+        <section class="control-panel"
+            style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:15px; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:0.8rem; color:var(--accent); font-weight:700;">⚡ JALWA CONNECT</span>
+                <span id="login-badge"
+                    style="font-size:0.65rem; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(244,63,94,0.15); color:#f43f5e; border:1px solid #f43f5e;">❌
+                    NOT CONNECTED</span>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <button onclick="localStorage.clear(); location.reload();"
+                    style="flex:1; background:rgba(244,63,94,0.1); color:#f43f5e; border:1px solid #f43f5e; padding:8px; border-radius:10px; font-size:0.7rem; cursor:pointer;">⚠️
+                    RESET TOOL</button>
+                <button
+                    onclick="window.open('https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino')"
+                    style="flex:1; background:rgba(59,130,246,0.15); color:#3b82f6; border:1px solid #3b82f6; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer;">🌐
+                    CORS FIX (EXTENSION)</button>
+            </div>
+
+            <div id="login-form" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                <input id="jalwa-phone" type="number" placeholder="Phone"
+                    style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:10px; color:#fff; font-size:0.85rem;">
+                <input id="jalwa-pass" type="password" placeholder="Pass"
+                    style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:10px; color:#fff; font-size:0.85rem;">
+            </div>
+
+            <button onclick="jalwaLogin()"
+                style="width:100%; background:linear-gradient(135deg,#10b981,#059669); border:none; border-radius:10px; padding:12px; color:#fff; font-weight:900; font-size:0.9rem; cursor:pointer; margin-bottom:10px; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">🔗
+                LOGIN & AUTO-SYNC</button>
+
+            <div style="display:flex; gap:8px;">
+                <button onclick="document.getElementById('token-import').style.display='block'"
+                    style="flex:1; background:rgba(99,102,241,0.15); border:1px solid #6366f1; border-radius:10px; padding:8px; color:#a5b4fc; font-weight:700; font-size:0.7rem; cursor:pointer;">🔑
+                    MANUAL TOKEN</button>
+                <button onclick="document.getElementById('master-import').style.display='block'"
+                    style="flex:1; background:rgba(16,185,129,0.1); border:1px solid #10b981; border-radius:10px; padding:8px; color:#10b981; font-weight:700; font-size:0.7rem; cursor:pointer;">🚀
+                    MASTER IMPORT</button>
+            </div>
+
+            <div id="token-import"
+                style="display:none; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                <input id="manual-token" type="text" placeholder="Paste Token Here..."
+                    style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:10px; color:#fff; font-size:0.7rem; margin-bottom:8px;">
+                <div style="display:flex; gap:8px;">
+                    <button onclick="copyTokenScript()"
+                        style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); color:#94a3b8; padding:8px; border-radius:8px; font-size:0.65rem; cursor:pointer;">📋
+                        COPY TOKEN SCRIPT</button>
+                    <button onclick="saveManualToken()"
+                        style="flex:1; background:#10b981; border:none; border-radius:8px; padding:8px; color:#fff; font-weight:700; font-size:0.7rem; cursor:pointer;">SAVE
+                        TOKEN</button>
+                </div>
+            </div>
+
+            <div id="fetch-status"
+                style="margin-top:12px; font-size:0.7rem; color:#94a3b8; text-align:center; min-height:18px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; line-height:1.4;">
+                Ready to sync...</div>
+        </section>
+
+        <!-- FAILSAFE -->
+        <section id="master-import"
+            style="display:none; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:18px; padding:15px; margin-bottom:15px;">
+            <div style="font-size:0.8rem; color:#10b981; font-weight:700; margin-bottom:10px;">🚀 MASTER FAIL-SAFE
+                IMPORT</div>
+            <textarea id="master-input" placeholder="e.g. 5,2,8,1,0..."
+                style="width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15); border-radius:10px; padding:10px; color:#fff; font-size:0.9rem; margin-bottom:10px; height:50px;"></textarea>
+            <button onclick="masterImport()"
+                style="width:100%; background:#10b981; border:none; border-radius:10px; padding:12px; color:#fff; font-weight:700; font-size:0.8rem; cursor:pointer;">✅
+                IMPORT NOW</button>
+        </section>
+
+        <section class="manual-entry-panel">
+            <div class="period-input-group">
+                <label for="period-box">CURRENT PERIOD (LAST 3 DIGITS)</label>
+                <input type="number" id="period-box" placeholder="e.g. 567" inputmode="numeric">
+            </div>
+
+            <div class="grid-label">TAP RECENT WINNER</div>
+            <div class="numpad">
+                <button class="n-btn vlt" onclick="addRound(0)">0</button>
+                <button class="n-btn grn" onclick="addRound(1)">1</button>
+                <button class="n-btn red" onclick="addRound(2)">2</button>
+                <button class="n-btn grn" onclick="addRound(3)">3</button>
+                <button class="n-btn red" onclick="addRound(4)">4</button>
+                <button class="n-btn grn-vlt" onclick="addRound(5)">5</button>
+                <button class="n-btn red" onclick="addRound(6)">6</button>
+                <button class="n-btn grn" onclick="addRound(7)">7</button>
+                <button class="n-btn red" onclick="addRound(8)">8</button>
+                <button class="n-btn grn" onclick="addRound(9)">9</button>
+            </div>
+        </section>
+
+        <section class="records-panel">
+            <div class="panel-header">RECENT RECORDS</div>
+            <div id="history-list"></div>
+        </section>
+
+        <button class="clear-btn" onclick="clearData()" style="width:100%; margin-top:10px;">CLEAR ALL DATA</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

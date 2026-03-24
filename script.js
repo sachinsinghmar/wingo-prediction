@@ -21,12 +21,31 @@ function addRound(num) {
     const size = num >= 5 ? "BIG" : "SMALL";
     const colors = getColors(num);
     const colorStr = colors.includes('red') ? "RED" : "GREEN";
+
+    // Track if the previous prediction was correct
     let winSize = (currentPredictionSize && size === currentPredictionSize);
     let winColor = (currentPredictionColor && colorStr === currentPredictionColor);
-    history.unshift({ period, number: num, size, colors, winSize, winColor });
-    if (history.length > 30) history.pop();
+
+    // Save prediction for this round record
+    history.unshift({
+        period,
+        number: num,
+        size,
+        colors,
+        winSize,
+        winColor,
+        predSize: currentPredictionSize,
+        predColor: currentPredictionColor
+    });
+
+    if (history.length > 50) history.pop();
     localStorage.setItem('wg_pro_history', JSON.stringify(history));
-    if (periodBox) periodBox.value = parseInt(period) + 1;
+
+    if (periodBox) {
+        let nextP = parseInt(period) + 1;
+        periodBox.value = nextP;
+    }
+
     renderHistory(); predict();
 }
 
@@ -308,13 +327,31 @@ function copyTokenScript() {
 
 function masterImport() {
     const input = document.getElementById('master-input').value.trim();
-    if (!input) return;
+    if (!input) { setStatus('⚠️ Please enter numbers!', '#f43f5e'); return; }
+
     const rawNums = input.split(/[,\s\n]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+    if (rawNums.length === 0) return;
+
+    // Use value from period box as the "Current Period"
     let basePeriod = parseInt(periodBox.value) || 123;
-    history = rawNums.map((num, i) => ({ period: String(basePeriod - i).slice(-3), number: num, size: num >= 5 ? 'BIG' : 'SMALL', colors: getColors(num), winSize: null, winColor: null }));
+
+    // We assume the numbers entered are Newest to Oldest
+    history = rawNums.map((num, i) => {
+        const p = basePeriod - (i + 1); // Current period is N, latest history is N-1
+        return {
+            period: String(p).padStart(3, '0').slice(-3),
+            number: num,
+            size: num >= 5 ? 'BIG' : 'SMALL',
+            colors: getColors(num),
+            winSize: null, // We don't know old predictions
+            winColor: null
+        };
+    });
+
     localStorage.setItem('wg_pro_history', JSON.stringify(history));
     renderHistory(); predict();
-    setStatus('✅ ' + history.length + ' rounds imported!', '#10b981');
+    setStatus(`✅ Imported ${rawNums.length} rounds!`, '#10b981');
+    document.getElementById('master-import').style.display = 'none';
 }
 
 window.addEventListener('DOMContentLoaded', () => {

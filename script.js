@@ -193,9 +193,12 @@ function clearData() { if (confirm("Sab clear?")) { history = []; localStorage.r
 // ===========================
 const API_URLS = [
     'https://api.jalwaapi.com/api/webapi',
-    'https://h5.ar-lottery06.com/api',
-    'https://api.a7jalx9.com/api/webapi'
+    'https://h5.ar-lottery06.com/api'
 ];
+const ENDPOINTS = {
+    login: '/Login',
+    history: '/GetNoaverageEmerdList'
+};
 
 const PROXIES = [
     'https://api.allorigins.win/get?url=',
@@ -227,15 +230,15 @@ async function jalwaLogin() {
     const loginName = (phone.length === 10) ? '91' + phone : phone;
 
     async function tryOne(proxy, baseUrl) {
-        const fullUrl = baseUrl + '/Member/Login';
+        const fullUrl = baseUrl + ENDPOINTS.login;
         let target = proxy ? (proxy.includes('allorigins') ? proxy + encodeURIComponent(fullUrl) : proxy + fullUrl) : fullUrl;
 
         try {
             setStatus(`Checking ${baseUrl.split('//')[1]}...`, '#a5b4fc');
             const res = await fetch(target, {
-                method: proxy.includes('allorigins') ? 'GET' : 'POST', // AllOrigins uses GET for proxying
+                method: proxy.includes('allorigins') ? 'GET' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: proxy.includes('allorigins') ? null : JSON.stringify({ loginName, loginPassword: pass, loginType: 0 })
+                body: proxy.includes('allorigins') ? null : JSON.stringify({ loginName: phone, loginPassword: pass, loginType: 0 })
             });
 
             let d = await res.json();
@@ -270,8 +273,8 @@ async function jalwaFetch() {
     const apiBase = localStorage.getItem('jalwa_api_base') || API_URLS[0];
     if (!token) return;
 
-    const url = apiBase + '/Lottery/GetLotteryHistory';
-    const body = { gameCode: 'WinGo_30S', pageNo: 1, pageSize: 30 };
+    const url = apiBase + ENDPOINTS.history;
+    const body = { typeId: 1, pageNo: 1, pageSize: 30 }; // typeId 1 = WinGo 30S
 
     for (let proxy of PROXIES) {
         try {
@@ -288,7 +291,7 @@ async function jalwaFetch() {
             if (d?.data?.list) {
                 const list = d.data.list;
                 history = list.map(r => ({
-                    period: String(r.period).slice(-3),
+                    period: String(r.issueNumber || r.period).slice(-3),
                     number: parseInt(r.number),
                     size: (parseInt(r.number) >= 5 ? 'BIG' : 'SMALL'),
                     colors: getColors(parseInt(r.number)),

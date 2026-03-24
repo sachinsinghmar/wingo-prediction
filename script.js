@@ -201,10 +201,10 @@ const ENDPOINTS = {
 };
 
 const PROXIES = [
+    '', // Direct fetch (Works with CORS Extension)
     'https://api.allorigins.win/get?url=',
     'https://cors-anywhere.herokuapp.com/',
-    'https://corsproxy.io/?url=',
-    ''
+    'https://corsproxy.io/?url='
 ];
 
 function setBadge(connected, label) {
@@ -236,22 +236,27 @@ async function jalwaLogin() {
         try {
             setStatus(`Checking ${baseUrl.split('//')[1]}...`, '#a5b4fc');
             const res = await fetch(target, {
-                method: proxy.includes('allorigins') ? 'GET' : 'POST',
+                method: (proxy && proxy.includes('allorigins')) ? 'GET' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: proxy.includes('allorigins') ? null : JSON.stringify({ loginName: phone, loginPassword: pass, loginType: 0 })
+                body: (proxy && proxy.includes('allorigins')) ? null : JSON.stringify({ loginName, loginPassword: pass, loginType: 0 })
             });
 
+            if (!res.ok) throw new Error(`Status ${res.status}`);
             let d = await res.json();
-            // Handle AllOrigins wrapper
-            if (proxy.includes('allorigins') && d.contents) d = JSON.parse(d.contents);
+            if (proxy && proxy.includes('allorigins') && d.contents) d = JSON.parse(d.contents);
 
             if (d?.data?.token) {
                 localStorage.setItem('jalwa_token', d.data.token);
                 localStorage.setItem('jalwa_api_base', baseUrl);
                 localStorage.setItem('jalwa_phone', phone);
                 return d.data.token;
+            } else if (d?.msg) {
+                throw new Error(d.msg);
             }
-        } catch (e) { console.error("Proxy Error:", e); }
+        } catch (e) {
+            console.error("Login Error:", e);
+            if (!proxy) setBadge(false, '❌ BLOCKED'); // If direct fail, maybe no extension
+        }
         return null;
     }
 
@@ -264,8 +269,8 @@ async function jalwaLogin() {
             }
         }
     }
-    setBadge(false, '❌ BLOCKED');
-    setStatus('⚠️ Kisi server ne response nahi diya. Manual ya Token mode use karein.', '#f43f5e');
+    setBadge(false, '❌ FAILED');
+    setStatus('⚠️ Kisi server ne response nahi diya. Credentials ya Extension check karein.', '#f43f5e');
 }
 
 async function jalwaFetch() {

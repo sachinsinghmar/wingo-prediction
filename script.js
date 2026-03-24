@@ -179,8 +179,9 @@ const API_URLS = [
 ];
 
 const PROXIES = [
+    'https://api.allorigins.win/get?url=',
+    'https://cors-anywhere.herokuapp.com/',
     'https://corsproxy.io/?url=',
-    'https://api.allorigins.win/raw?url=',
     ''
 ];
 
@@ -208,26 +209,27 @@ async function jalwaLogin() {
 
     async function tryOne(proxy, baseUrl) {
         const fullUrl = baseUrl + '/Member/Login';
-        const target = proxy ? (proxy.includes('corsproxy.io') || proxy.includes('allorigins') ? proxy + encodeURIComponent(fullUrl) : proxy + fullUrl) : fullUrl;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        let target = proxy ? (proxy.includes('allorigins') ? proxy + encodeURIComponent(fullUrl) : proxy + fullUrl) : fullUrl;
+
         try {
-            setStatus(`Cheking ${baseUrl.split('//')[1]}...`, '#a5b4fc');
+            setStatus(`Checking ${baseUrl.split('//')[1]}...`, '#a5b4fc');
             const res = await fetch(target, {
-                method: 'POST',
+                method: proxy.includes('allorigins') ? 'GET' : 'POST', // AllOrigins uses GET for proxying
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ loginName, loginPassword: pass, loginType: 0 }),
-                signal: controller.signal
+                body: proxy.includes('allorigins') ? null : JSON.stringify({ loginName, loginPassword: pass, loginType: 0 })
             });
-            clearTimeout(timeoutId);
-            const d = await res.json();
+
+            let d = await res.json();
+            // Handle AllOrigins wrapper
+            if (proxy.includes('allorigins') && d.contents) d = JSON.parse(d.contents);
+
             if (d?.data?.token) {
                 localStorage.setItem('jalwa_token', d.data.token);
                 localStorage.setItem('jalwa_api_base', baseUrl);
                 localStorage.setItem('jalwa_phone', phone);
                 return d.data.token;
             }
-        } catch (e) { }
+        } catch (e) { console.error("Proxy Error:", e); }
         return null;
     }
 
@@ -235,7 +237,7 @@ async function jalwaLogin() {
         for (let baseUrl of API_URLS) {
             const tok = await tryOne(proxy, baseUrl);
             if (tok) {
-                setBadge(true); setStatus('✅ Login Success! Sync ho raha hai...', '#10b981');
+                setBadge(true); setStatus('✅ Login Success! Syncing...', '#10b981');
                 return jalwaFetch();
             }
         }
@@ -254,13 +256,16 @@ async function jalwaFetch() {
 
     for (let proxy of PROXIES) {
         try {
-            const target = proxy ? (proxy.includes('corsproxy.io') || proxy.includes('allorigins') ? proxy + encodeURIComponent(url) : proxy + url) : url;
+            let target = proxy ? (proxy.includes('allorigins') ? proxy + encodeURIComponent(url) : proxy + url) : url;
             const res = await fetch(target, {
-                method: 'POST',
+                method: proxy.includes('allorigins') ? 'GET' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify(body)
+                body: proxy.includes('allorigins') ? null : JSON.stringify(body)
             });
-            const d = await res.json();
+
+            let d = await res.json();
+            if (proxy.includes('allorigins') && d.contents) d = JSON.parse(d.contents);
+
             if (d?.data?.list) {
                 const list = d.data.list;
                 history = list.map(r => ({
@@ -276,8 +281,9 @@ async function jalwaFetch() {
                 setStatus(`✅ ${list.length} rounds sync! #${periodBox.value}`, '#10b981');
                 return;
             }
-        } catch (e) { }
+        } catch (e) { console.error("Fetch Error:", e); }
     }
+    setStatus('⚠️ Sync failed. Try Manual Token or Refresh.', '#f43f5e');
 }
 
 // MANUAL TOKEN FUNCTIONS
